@@ -147,13 +147,13 @@ module.exports = declare((api) => {
         if (moduleSpecifier) {
           path.insertAfter(types.importDeclaration([], types.stringLiteral(moduleSpecifier)));
         }
-        // path.remove();
+        path.remove();
       }
     }
   };
 
   return {
-    name: 'babel-plugin-extract-fn',
+    name: 'babel-plugin-system-css',
     visitor
   };
 });

@@ -94,7 +94,7 @@ module.exports = declare((api) => {
         const outFilePath = state.file.get('outFilePath');
         appendCSS({ outFilePath, className, stringifiedStyles });
 
-        path.replaceWithSourceString(`"${className}"`);
+        path.replaceWith(types.stringLiteral(className));
       }
     },
     JSXAttribute(path, state) {
@@ -153,7 +153,7 @@ module.exports = declare((api) => {
   };
 
   return {
-    name: 'babel-plugin-extract-fn',
+    name: 'babel-plugin-system-css',
     visitor
   };
 });

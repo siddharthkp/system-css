@@ -35,7 +35,7 @@ export const css = (...styleArr) => {
 export const collect = () => {
   let serverSheet = ``;
   for (const [className, styles] of cssMap) {
-    serverSheet += `.${className} { ${styles} };\n`;
+    serverSheet += `.${className} { ${styles} }\n`;
   }
   return serverSheet;
 };

@@ -4,7 +4,6 @@ import { collect } from 'system-css';
 
 export default class Document extends NextDocument {
   render() {
-    console.log(collect());
     return (
       <Html lang="en">
         <Head>
