@@ -9,11 +9,39 @@ if (typeof document !== 'undefined') {
   styleSheet = styleEl.sheet;
 }
 
-export const css = (styles) => {
-  const stringStyles = toString(styles);
-  const className = 'sc-' + hash(stringStyles);
+const cssMap = new Map();
 
-  if (styleSheet) styleSheet.insertRule(`.${className} { ${stringStyles} }`, styleSheet.cssRules.length);
+export const css = (...styleArr) => {
+  const classNames = styleArr
+    .map((styles) => {
+      if (!styles || !Object.keys(styles)) return null;
 
-  return className;
+      const stringStyles = toString(styles);
+      const className = 'sc-' + hash(stringStyles);
+
+      if (styleSheet && !cssMap.get(className)) {
+        const index = styleSheet.insertRule(`.${className} { ${stringStyles} }`, styleSheet.cssRules.length);
+        cssMap.set(className, index);
+      }
+
+      return className;
+    })
+    .filter(Boolean)
+    .join(' ');
+
+  return classNames;
+};
+
+const sx2css = (sx, accumulator = []) => {
+  const { overrides, ...rest } = sx;
+  accumulator.push(rest);
+
+  if (overrides) sx2css(overrides, accumulator);
+
+  return accumulator;
+};
+
+export const cssx = (sx) => {
+  const stylesArr = sx2css(sx);
+  return css(...stylesArr);
 };

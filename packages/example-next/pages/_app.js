@@ -1,4 +1,4 @@
-import 'system-css/out.css';
+// import 'system-css/out.css';
 
 function MyApp({ Component, pageProps }) {
   return <Component {...pageProps} />;

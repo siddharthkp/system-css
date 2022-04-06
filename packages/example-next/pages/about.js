@@ -1,17 +1,17 @@
-import { css } from 'system-css';
+import Box from '../components/Box';
 import { Link } from '../components/link';
-import { containerClassName } from './index';
+import { containerStyles } from './index';
 
 function About() {
   return (
-    <main className={containerClassName}>
-      <Link href="/" className={css({ textDecoration: 'none' })}>
+    <Box as="main" sx={containerStyles}>
+      <Link href="/" sx={{ textDecoration: 'none' }}>
         ← Home
       </Link>
 
       <h1>About</h1>
       <p>no thanks, i&apos;m shy</p>
-    </main>
+    </Box>
   );
 }
 

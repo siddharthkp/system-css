@@ -1,4 +1,4 @@
 {
   "presets": ["next/babel"],
-  "plugins": [["system-css/babel", { "skipImport": true }]]
+  "plugins": [["system-css/babel-sx", { "skipImport": true }]]
 }

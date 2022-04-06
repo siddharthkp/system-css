@@ -1,25 +1,27 @@
-import { css } from 'system-css';
+import Box from '../components/Box';
 import { Link } from '../components/link';
 
 const AboutUsLink = (props) => {
   return (
-    <Link href="/about" className={css({ fontSize: props.size })}>
+    <Link href="/about" sx={{ color: props.color }}>
       About me
     </Link>
   );
 };
 
-export const containerClassName = css({
+export const containerStyles = {
   color: 'tomato',
   fontFamily: 'sans-serif'
-});
+};
 
 function Home() {
   return (
-    <main className={containerClassName}>
+    <Box as="main" sx={containerStyles}>
       <h1>Hello!</h1>
-      <AboutUsLink size="20px" />
-    </main>
+      <AboutUsLink color="salmon" />
+      <br />
+      <Link href="https://primer.style">Primer</Link>
+    </Box>
   );
 }
 

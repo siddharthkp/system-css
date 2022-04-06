@@ -1,7 +1,5 @@
-import { css } from 'system-css';
+import Box from './Box';
 
-export const Link = ({ sx = {}, ...props }) => {
-  const className = css({ color: 'teal' });
-
-  return <a {...props} className={className + ' ' + props.className} />;
+export const Link = (props) => {
+  return <Box as="a" {...props} sx={{ color: 'teal', overrides: props.sx }} />;
 };
