@@ -4,10 +4,11 @@ import { collect } from 'system-css';
 
 export default class Document extends NextDocument {
   render() {
+    console.log(collect());
     return (
       <Html lang="en">
         <Head>
-          <style id="system-css" dangerouslySetInnerHTML={{ __html: collect() }} />
+          <style id="system-css-ssr" dangerouslySetInnerHTML={{ __html: collect() }} />
         </Head>
         <body>
           <Main />

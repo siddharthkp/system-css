@@ -4,7 +4,7 @@ import { string as toString } from 'to-style';
 let styleSheet;
 if (typeof document !== 'undefined') {
   const styleEl = document.createElement('style');
-  styleEl.id = 'system-css';
+  styleEl.id = 'system-css-client';
   document.head.appendChild(styleEl);
   styleSheet = styleEl.sheet;
 }
@@ -19,9 +19,9 @@ export const css = (...styleArr) => {
       const stringStyles = toString(styles);
       const className = 'sc-' + hash(stringStyles);
 
+      cssMap.set(className, stringStyles);
       if (styleSheet && !cssMap.get(className)) {
         styleSheet.insertRule(`.${className} { ${stringStyles} }`, styleSheet.cssRules.length);
-        cssMap.set(className, stringStyles);
       }
 
       return className;
@@ -33,10 +33,11 @@ export const css = (...styleArr) => {
 };
 
 export const collect = () => {
-  const stylesheet = ``;
+  let serverSheet = ``;
   for (const [className, styles] of cssMap) {
-    stylesheet += `${className} { ${styles} }`;
+    serverSheet += `.${className} { ${styles} };\n`;
   }
+  return serverSheet;
 };
 
 const sx2css = (sx, accumulator = []) => {
