@@ -20,8 +20,8 @@ export const css = (...styleArr) => {
       const className = 'sc-' + hash(stringStyles);
 
       if (styleSheet && !cssMap.get(className)) {
-        const index = styleSheet.insertRule(`.${className} { ${stringStyles} }`, styleSheet.cssRules.length);
-        cssMap.set(className, index);
+        styleSheet.insertRule(`.${className} { ${stringStyles} }`, styleSheet.cssRules.length);
+        cssMap.set(className, stringStyles);
       }
 
       return className;
@@ -30,6 +30,13 @@ export const css = (...styleArr) => {
     .join(' ');
 
   return classNames;
+};
+
+export const collect = () => {
+  const stylesheet = ``;
+  for (const [className, styles] of cssMap) {
+    stylesheet += `${className} { ${styles} }`;
+  }
 };
 
 const sx2css = (sx, accumulator = []) => {
