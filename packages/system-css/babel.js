@@ -45,7 +45,7 @@ module.exports = declare((api) => {
           outFilePath = nodePath.join(__dirname, 'out.css');
         }
         state.file.set('outFilePath', outFilePath);
-        if (!state.opts.skipImport) state.file.set('moduleSpecifier', outFilePath);
+        if (state.opts.addImport) state.file.set('moduleSpecifier', outFilePath);
 
         // reset outfile
         if (!ensuredOutFileExists) {

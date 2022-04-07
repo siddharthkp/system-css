@@ -9,7 +9,7 @@ if (typeof document !== 'undefined') {
   styleSheet = styleEl.sheet;
 }
 
-const cssMap = new Map();
+let cssMap = new Map();
 
 export const css = (...styleArr) => {
   const classNames = styleArr
@@ -32,14 +32,6 @@ export const css = (...styleArr) => {
   return classNames;
 };
 
-export const collect = () => {
-  let serverSheet = ``;
-  for (const [className, styles] of cssMap) {
-    serverSheet += `.${className} { ${styles} }\n`;
-  }
-  return serverSheet;
-};
-
 const sx2css = (sx, accumulator = []) => {
   const { overrides, ...rest } = sx;
   accumulator.push(rest);
@@ -52,4 +44,12 @@ const sx2css = (sx, accumulator = []) => {
 export const cssx = (sx) => {
   const stylesArr = sx2css(sx);
   return css(...stylesArr);
+};
+
+export const collect = () => {
+  let serverSheet = ``;
+  for (const [className, styles] of cssMap) {
+    serverSheet += `.${className} { ${styles} }\n`;
+  }
+  return serverSheet;
 };

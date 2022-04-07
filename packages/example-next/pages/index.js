@@ -17,7 +17,7 @@ export const containerClassName = css({
 function Home() {
   return (
     <main className={containerClassName}>
-      <h1>Hello!</h1>
+      <h1 className={css({ fontStyle: 'italic' })}>Hello!</h1>
       <AboutUsLink size="20px" />
     </main>
   );
