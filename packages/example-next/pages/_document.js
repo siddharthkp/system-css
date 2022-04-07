@@ -7,7 +7,7 @@ export default class Document extends NextDocument {
     return (
       <Html lang="en">
         <Head>
-          <style id="system-css-ssr" dangerouslySetInnerHTML={{ __html: collect() }} />
+          <style id="system-css-server" dangerouslySetInnerHTML={{ __html: collect() }} />
         </Head>
         <body>
           <Main />

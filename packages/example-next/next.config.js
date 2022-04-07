@@ -1,9 +1,9 @@
-const configWithBabel = require('next-split-babelrc');
+const splitConfig = require('next-split-babelrc');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  webpack: configWithBabel
+  webpack: splitConfig
 };
 
 module.exports = nextConfig;
