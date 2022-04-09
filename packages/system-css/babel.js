@@ -128,6 +128,8 @@ module.exports = declare((api) => {
           } else {
             injectRuntimeExpressionToSetCSSVar(path, cssVarName, property);
           }
+        } else {
+          // unknown type, we don't know what to do with it
         }
       });
 

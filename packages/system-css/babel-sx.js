@@ -52,38 +52,112 @@ module.exports = declare((api) => {
           fs.writeFileSync(outFilePath, '');
           ensuredOutFileExists = true;
         }
+
+        state.file.set('warnings', []);
+      },
+      exit(path, state) {
+        const warnings = state.file.get('warnings');
+
+        warnings.forEach((warning) => {
+          path.node.body.push(types.throwStatement(types.stringLiteral(warning)));
+        });
       }
     },
     CallExpression(path, state) {
       const { callee, arguments: args } = path.node;
-
-      if (callee.name === 'css') {
+      if (callee.name === 'css' || callee.name === 'cssx') {
         const [arg] = args;
-
         // if a className string passed, replace expression with className
         if (arg.type === 'Identifier') path.replaceWith(arg);
-
         if (arg.type !== 'ObjectExpression') return;
-
         const styles = {};
-
         arg.properties.forEach((property) => {
           if (['NumericLiteral', 'StringLiteral'].includes(property.value.type)) {
             styles[property.key.name] = property.value.value;
           } else if (types.isExpression(property.value) || types.isIdentifier(property.value)) {
             const rawCode = state.file.code.slice(property.value.start, property.value.end);
-
             // we wan't an unique custom variable that is
             const uniq = hash(state.filename + rawCode);
             const cssVarName = '--' + rawCode.replace(/\./g, '-').toLowerCase() + '-' + uniq; // example: props-color-ioan3s
-
             styles[property.key.name] = `var(${cssVarName})`;
+            setCSSVarInStyle(path, cssVarName, property);
+          }
+        });
+        const stringifiedStyles = toString(styles);
+        const className = 'sc-' + hash(stringifiedStyles);
+        const outFilePath = state.file.get('outFilePath');
+        appendCSS({ outFilePath, className, stringifiedStyles });
 
-            if (path.container.type === 'JSXExpressionContainer') {
+        path.replaceWith(types.stringLiteral(className));
+      }
+    },
+    JSXAttribute(path, state) {
+      if (path.node.name.name !== 'sx') return;
+
+      // don't know what to do with this
+      if (path.node.value.type !== 'JSXExpressionContainer') return;
+
+      const arg = path.node.value.expression;
+      if (arg.type !== 'ObjectExpression') return;
+
+      const styles = {};
+      let overridesClassIdentifier;
+
+      try {
+        arg.properties.forEach((property) => {
+          if (types.isObjectProperty(property)) {
+            if (property.key.name === 'overrides') {
+              // overrides should be an identifier which has a className inside it
+              overridesClassIdentifier = property.value;
+            } else if (['NumericLiteral', 'StringLiteral'].includes(property.value.type)) {
+              styles[property.key.name] = property.value.value;
+            } else if (types.isExpression(property.value) || types.isIdentifier(property.value)) {
+              const rawCode = state.file.code.slice(property.value.start, property.value.end);
+
+              // we wan't an unique custom variable that is
+              const uniq = hash(state.filename + rawCode);
+              const cssVarName = '--' + rawCode.replace(/\./g, '-').toLowerCase() + '-' + uniq; // example: props-color-ioan3s
+
+              styles[property.key.name] = `var(${cssVarName})`;
+
               setCSSVarInStyle(path, cssVarName, property);
             } else {
-              injectRuntimeExpressionToSetCSSVar(path, cssVarName, property);
+              // unhandled type like function, object or array
             }
+          } else if (types.isSpreadElement(property)) {
+            // example: sx={{ color: 'teal', ...sx }
+            // This syntax is not allowed because this merges styles on runtime, but can't be compiled down
+            const code = state.file.code.slice(path.node.start, property.end);
+
+            // TODO: get line contents to align the underline better
+            const warning = `Syntax not allowed: ${property.type}
+            
+  ${code}
+  ${Array(property.start - path.node.start).join(' ')} ${Array(property.end - property.start + 1).join('^')}
+            
+  This syntax is not allowed because it can not be compiled down
+  to the same className as the one generated on runtime.
+
+  Consider using \`overrides\` instead:
+
+  ${code.replace('...', 'overrides: ')}
+  ${Array(property.start - path.node.start).join(' ')} ${Array(property.end - property.start + 1 + 7).join('▔')}
+            
+            `;
+            state.file.set('warnings', [...state.file.get('warnings'), warning]);
+          } else {
+            // unhandled types - function, arrays, objects, etc.
+            const code = state.file.code.slice(path.node.start, property.end);
+            const warning = `Syntax not handled yet: ${property.type}
+            
+  ${code}
+  ${Array(property.start - path.node.start).join(' ')} ${Array(property.end - property.start + 1).join('^')}
+            
+  This syntax is not yet supported and might cause mismatch between compiled className
+  and className generated at runtime.
+
+            `;
+            state.file.set('warnings', [...state.file.get('warnings'), warning]);
           }
         });
 
@@ -94,52 +168,21 @@ module.exports = declare((api) => {
         const outFilePath = state.file.get('outFilePath');
         appendCSS({ outFilePath, className, stringifiedStyles });
 
-        path.replaceWithSourceString(`"${className}"`);
-      }
-    },
-    JSXAttribute(path, state) {
-      if (path.node.name.name !== 'sx') return;
-
-      // don't know what to do with this
-      if (path.node.value.type !== 'JSXExpressionContainer') return;
-
-      const arg = path.node.value.expression;
-
-      // copied from above
-
-      if (arg.type !== 'ObjectExpression') return;
-
-      const styles = {};
-
-      arg.properties.forEach((property) => {
-        if (['NumericLiteral', 'StringLiteral'].includes(property.value.type)) {
-          styles[property.key.name] = property.value.value;
-        } else if (types.isExpression(property.value) || types.isIdentifier(property.value)) {
-          const rawCode = state.file.code.slice(property.value.start, property.value.end);
-
-          // we wan't an unique custom variable that is
-          const uniq = hash(state.filename + rawCode);
-          const cssVarName = '--' + rawCode.replace(/\./g, '-').toLowerCase() + '-' + uniq; // example: props-color-ioan3s
-
-          styles[property.key.name] = `var(${cssVarName})`;
-
-          if (path.container.type === 'JSXExpressionContainer') {
-            setCSSVarInStyle(path, cssVarName, property);
-          } else {
-            injectRuntimeExpressionToSetCSSVar(path, cssVarName, property);
-          }
+        // different from above, replace object with className
+        if (!overridesClassIdentifier) path.node.value.expression = types.stringLiteral(`${className}`);
+        else {
+          path.replaceWith(
+            types.jsxAttribute(
+              types.JSXIdentifier('sx'),
+              types.jsxExpressionContainer(
+                types.binaryExpression('+', types.stringLiteral(className + ' '), overridesClassIdentifier)
+              )
+            )
+          );
         }
-      });
-
-      const stringifiedStyles = toString(styles);
-
-      const className = 'sc-' + hash(stringifiedStyles);
-
-      const outFilePath = state.file.get('outFilePath');
-      appendCSS({ outFilePath, className, stringifiedStyles });
-
-      // different from above, replace object with className
-      path.node.value.expression = types.stringLiteral(`${className}`);
+      } catch (error) {
+        console.log(error);
+      }
     },
     ImportDeclaration(path, state) {
       if (path.node.source.value === 'system-css') {
@@ -171,29 +214,4 @@ const setCSSVarInStyle = (path, cssVar, property) => {
       types.jsxAttribute(types.JSXIdentifier('style'), types.jsxExpressionContainer(types.objectExpression([keyVal])))
     );
   }
-};
-
-const injectRuntimeExpressionToSetCSSVar = (path, cssVar, property) => {
-  // test: if (typeof document !== 'undefined')
-  const test = types.binaryExpression(
-    '!==',
-    types.unaryExpression('typeof', types.identifier('document')),
-    types.stringLiteral('undefined')
-  );
-
-  // consonent: document.documentElement.style.setProperty('--custom', value);
-  const consonent = types.expressionStatement(
-    types.callExpression(
-      types.memberExpression(
-        types.memberExpression(
-          types.memberExpression(types.identifier('document'), types.identifier('documentElement')),
-          types.identifier('style')
-        ),
-        types.identifier('setProperty')
-      ),
-      [types.stringLiteral(cssVar), property.value]
-    )
-  );
-
-  path.parentPath.parentPath.insertAfter(types.ifStatement(test, consonent));
 };

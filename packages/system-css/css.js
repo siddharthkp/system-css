@@ -13,14 +13,29 @@ let cssMap = new Map();
 
 export const css = (...styleArr) => {
   const classNames = styleArr
-    .map((styles) => {
-      if (!styles || !Object.keys(styles)) return null;
+    .map((element) => {
+      if (!element || !Object.keys(element)) return null;
 
-      const stringStyles = toString(styles);
-      const className = 'sc-' + hash(stringStyles);
+      let className, stringStyles;
+
+      // if debugKey is specified
+      if (element.debugKey && element.styles) {
+        const { debugKey, styles: stylesObj } = element;
+
+        if (!stylesObj) return null;
+        stringStyles = toString(stylesObj);
+        className = 'sc-' + debugKey.replace('_', '') + '-' + hash(stringStyles);
+      } else {
+        const stylesObj = element;
+        stringStyles = toString(stylesObj);
+        className = 'sc-' + hash(stringStyles);
+      }
+
+      // already inserted
+      if (cssMap.get(className)) return className;
 
       cssMap.set(className, stringStyles);
-      if (styleSheet && !cssMap.get(className)) {
+      if (styleSheet) {
         styleSheet.insertRule(`.${className} { ${stringStyles} }`, styleSheet.cssRules.length);
       }
 
@@ -41,7 +56,7 @@ const sx2css = (sx, accumulator = []) => {
   return accumulator;
 };
 
-export const cssx = (sx) => {
+export const cssx = (sx = {}) => {
   const stylesArr = sx2css(sx);
   return css(...stylesArr);
 };

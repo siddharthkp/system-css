@@ -2,5 +2,8 @@
 
 module.exports = {
   presets: ['next/babel'],
-  plugins: ['system-css/babel']
+  plugins: [
+    'system-css/babel-decorate'
+    // 'system-css/babel-sx'
+  ]
 };
